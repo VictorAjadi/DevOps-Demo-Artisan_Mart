@@ -244,8 +244,6 @@ certs/
 .webpack/
 .parcel-cache/
 
-.dockerignore
-
 *.pem
 .terraform/
 *.hcl
