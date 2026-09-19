@@ -5,11 +5,8 @@ pipeline {
     }
 
     options {
-
-        // Prevent two builds from modifying the same environment concurrently.
         disableConcurrentBuilds()
 
-        // Keep useful build history.
         buildDiscarder(
             logRotator(
                 numToKeepStr: '20',
@@ -17,18 +14,12 @@ pipeline {
             )
         )
 
-        // We explicitly checkout the repository in the Checkout stage.
         skipDefaultCheckout(true)
-
-        // Add timestamps to Jenkins console output.
         timestamps()
-
-        // Maximum pipeline execution time.
         timeout(time: 30, unit: 'MINUTES')
     }
 
     environment {
-
         DOCKER_FRONTEND_REPO = 'victorajadi/artisan-mart-frontend'
         DOCKER_BACKEND_REPO  = 'victorajadi/artisan-mart-backend'
 
@@ -62,7 +53,6 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-
                 withCredentials([
                     usernamePassword(
                         credentialsId: "${DOCKER_CREDENTIALS}",
@@ -70,8 +60,7 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-
-                    sh '''
+                    sh '''#!/bin/bash
                         set -euo pipefail
 
                         echo "Logging into Docker Hub..."
@@ -88,8 +77,7 @@ pipeline {
 
         stage('Build Frontend Image') {
             steps {
-
-                sh '''
+                sh '''#!/bin/bash
                     set -euo pipefail
 
                     echo "Building frontend image..."
@@ -98,7 +86,7 @@ pipeline {
                         --pull \
                         --tag "${DOCKER_FRONTEND_IMAGE}" \
                         --file frontend/Dockerfile \
-                        .
+                        frontend
 
                     echo "Frontend image built:"
                     docker image inspect "${DOCKER_FRONTEND_IMAGE}" \
@@ -109,8 +97,7 @@ pipeline {
 
         stage('Build Backend Image') {
             steps {
-
-                sh '''
+                sh '''#!/bin/bash
                     set -euo pipefail
 
                     echo "Building backend image..."
@@ -119,7 +106,7 @@ pipeline {
                         --pull \
                         --tag "${DOCKER_BACKEND_IMAGE}" \
                         --file backend/Dockerfile \
-                        .
+                        backend
 
                     echo "Backend image built:"
                     docker image inspect "${DOCKER_BACKEND_IMAGE}" \
@@ -129,17 +116,14 @@ pipeline {
         }
 
         stage('Push Images') {
-
             parallel {
 
                 stage('Push Frontend') {
                     steps {
-
-                        sh '''
+                        sh '''#!/bin/bash
                             set -euo pipefail
 
                             echo "Pushing frontend image..."
-
                             docker push "${DOCKER_FRONTEND_IMAGE}"
                         '''
                     }
@@ -147,12 +131,10 @@ pipeline {
 
                 stage('Push Backend') {
                     steps {
-
-                        sh '''
+                        sh '''#!/bin/bash
                             set -euo pipefail
 
                             echo "Pushing backend image..."
-
                             docker push "${DOCKER_BACKEND_IMAGE}"
                         '''
                     }
@@ -162,10 +144,9 @@ pipeline {
 
         stage('Deploy') {
             steps {
-
                 echo "Images successfully built and pushed."
 
-                sh '''
+                sh '''#!/bin/bash
                     set -euo pipefail
 
                     echo "========================================"
@@ -213,12 +194,7 @@ pipeline {
         }
 
         always {
-
-            /*
-             * Remove Docker Hub authentication
-             * and clean the Jenkins workspace.
-             */
-            sh '''
+            sh '''#!/bin/bash
                 docker logout || true
             '''
 
