@@ -1,0 +1,33 @@
+version: "3"
+services:
+  frontend: 
+    image: victorajadi/artisan-mart-frontend
+    stdin_open: true
+    ports:
+      - "3000:80"
+    networks:
+      - artisan-mart-network
+  backend:
+    image: victorajadi/artisan-mart-backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    networks:
+      - artisan-mart-network
+  mongo:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - artisan-mart-network
+      
+
+networks:
+  artisan-mart-network:
+    driver: bridge
+volumes: 
+  mongodb_data:
+    driver: local
